@@ -1,24 +1,29 @@
-import os, re
-import git, chardet
+import os
+import re
+import git
+import chardet
 
-pciids_repo = 'https://github.com/pciutils/pciids.git'
-tmp_git_repo = '.tmp/'
-pci_ids_raw_file = os.path.join(tmp_git_repo, 'pci.ids')
+PCIIDS_REPO = 'https://github.com/pciutils/pciids.git'
+TMP_GIT_REPO = '.tmp/'
+pci_ids_raw_file = os.path.join(TMP_GIT_REPO, 'pci.ids')
 
-def checkEncoding(file):
-    bytes = min(32, os.path.getsize(file))
-    raw = open(file, 'rb').read(bytes)
+def check_encoding(file):
+    """
+    auto check file encoding
+    """
+    mybytes = min(32, os.path.getsize(file))
+    raw = open(file, 'rb').read(mybytes)
     result = chardet.detect(raw)
     encoding = result['encoding']
     return encoding
 
 try:
     # if the repository does not exist yet, clone it first
-    new_repo = git.Repo.clone_from(url = pciids_repo, to_path = tmp_git_repo)
+    new_repo = git.Repo.clone_from(url = PCIIDS_REPO, to_path = TMP_GIT_REPO)
 except:
     pass
 
-with git.Repo.init(path=tmp_git_repo) as repo:
+with git.Repo.init(path=TMP_GIT_REPO) as repo:
     # discard any changes
     repo.index.checkout(force=True)
     remote = repo.remote()
@@ -56,15 +61,16 @@ pattern1 = re.compile(r"^[0-9a-fA-F]{4}\s{2}.*")
 pattern2 = re.compile(r"^\t[0-9a-fA-F]{4}\s{2}.*")
 pattern3 = re.compile(r"^\t{2}[0-9a-fA-F]{4}\s[0-9a-fA-F]{4}\s{2}.*")
 # open the file with detected character encoding
-for i, line in enumerate(open(pci_ids_raw_file, encoding = checkEncoding(pci_ids_raw_file), errors = 'ignore')):
+for i, line in enumerate(open(pci_ids_raw_file, encoding = check_encoding(pci_ids_raw_file), \
+    errors = 'ignore')):
     for match in re.findall(pattern1, line):
-        line = re.sub('\s+',' ',line).strip() # replace multiple whitespaces with single spaces
+        line = re.sub(r'\s+',' ',line).strip() # replace multiple whitespaces with single spaces
         list1.append(line.split(' ', 1))
     for match in re.findall(pattern2, line):
-        line = re.sub('\s+',' ',line).strip() # replace multiple whitespaces with single spaces
+        line = re.sub(r'\s+',' ',line).strip() # replace multiple whitespaces with single spaces
         list2.append(line.split(' ', 1))
     for match in re.findall(pattern3, line):
-        line = re.sub('\s+',' ',line).strip() # replace multiple whitespaces with single spaces
+        line = re.sub(r'\s+',' ',line).strip() # replace multiple whitespaces with single spaces
         list3.append(line.split(' ', 2))
 
 # print(len(list3))
